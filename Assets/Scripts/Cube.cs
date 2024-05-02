@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class Cube : MonoBehaviour
 {
-    private const float MaxPercentage = 100;
+    private const float MaxPercentage = 1;
     private const float MinPercentage = 0;
 
     private int _maxNumberCubes = 6;
@@ -14,7 +14,6 @@ public class Cube : MonoBehaviour
     private float _explosionForce = 10f;
     private float _explosionRadius = 5f;
 
-    private float _divisionChance = 100;
     private MeshRenderer _meshRenderer;
 
     private void OnEnable()
@@ -25,10 +24,8 @@ public class Cube : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if(_divisionChance >= Random.Range(MinPercentage, MaxPercentage))
+        if (transform.localScale.x >= Random.Range(MinPercentage, MaxPercentage))
         {
-            _divisionChance /= _divisor;
-
             List<Rigidbody> newCubes = new();
 
             for (int i = 0; i < Random.Range(_minNumberCubes, _maxNumberCubes); i++)
