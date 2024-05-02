@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 [RequireComponent(typeof(MeshRenderer))]
 [RequireComponent(typeof(Rigidbody))]
@@ -8,13 +8,11 @@ public class Cube : MonoBehaviour
     private const float MaxPercentage = 1;
     private const float MinPercentage = 0;
 
-    private int _maxNumberCubes = 6;
-    private int _minNumberCubes = 1;
     private float _divisor = 2f;
-    private float _explosionForce = 10f;
-    private float _explosionRadius = 5f;
-
     private MeshRenderer _meshRenderer;
+
+    public Vector3 Size => transform.localScale;
+    public event UnityAction<Cube> Divided;
 
     private void OnEnable()
     {
@@ -24,29 +22,17 @@ public class Cube : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (transform.localScale.x >= Random.Range(MinPercentage, MaxPercentage))
+        if (Size.x >= Random.Range(MinPercentage, MaxPercentage))
         {
-            List<Rigidbody> newCubes = new();
-
-            for (int i = 0; i < Random.Range(_minNumberCubes, _maxNumberCubes); i++)
-            {
-                Cube cube = Instantiate(this, transform.position, Random.rotation);
-                cube.transform.localScale /= _divisor;
-                newCubes.Add(cube.GetComponent<Rigidbody>());
-            }
-
             transform.localScale /= _divisor;
-            _meshRenderer.material.color = Random.ColorHSV();
-            newCubes.Add(GetComponent<Rigidbody>());
+            Divided.Invoke(this);
+        }
 
-            foreach (Rigidbody item in newCubes)
-            {
-                item.AddExplosionForce(_explosionForce, transform.position, _explosionRadius);
-            }
-        }
-        else
-        {
-            gameObject.SetActive(false);
-        }
+        gameObject.SetActive(false);
+    }
+
+    public void CatchUp(Cube cube)
+    {
+        transform.localScale = cube.Size;
     }
 }
