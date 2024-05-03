@@ -27,19 +27,26 @@ public class Test : MonoBehaviour
         }
     }
 
-    private void CheckClick(Cube mainCube)
+    private void CheckClick(Cube mainCube, bool isAlive)
     {
-        List<Cube> newCubes = new();
-        _numberNewCubes = Random.Range(_minNumberCubes, _maxNumberCubes);
+        if (isAlive)
+        {
+            List<Cube> newCubes = new();
+            _numberNewCubes = Random.Range(_minNumberCubes, _maxNumberCubes);
 
-        newCubes.AddRange(ReuseInactiveCubes(mainCube));
+            newCubes.AddRange(ReuseInactiveCubes(mainCube));
 
-        if (_numberNewCubes > 0)
-            newCubes.AddRange(CreateMissingCubes(mainCube));
+            if (_numberNewCubes > 0)
+                newCubes.AddRange(CreateMissingCubes(mainCube));
 
-        Scatter(newCubes);
+            Scatter(newCubes);
 
-        _cubes.AddRange(newCubes);
+            _cubes.AddRange(newCubes);
+        }
+        else
+        {
+            Explosion(mainCube);
+        }
     }
 
     private List<Cube> ReuseInactiveCubes(Cube mainCube)
@@ -89,6 +96,22 @@ public class Test : MonoBehaviour
             if (newCube.TryGetComponent(out Rigidbody rigidbody))
             {
                 rigidbody.AddExplosionForce(_explosionForce, transform.position, _explosionRadius);
+            }
+        }
+    }
+
+    private void Explosion(Cube cube)
+    {
+        Collider[] hits = Physics.OverlapSphere(cube.transform.position, _explosionRadius / cube.Size.x);
+
+        foreach (Collider hit in hits)
+        {
+            if (hit.TryGetComponent(out Rigidbody rigidbody))
+            {
+                rigidbody.AddExplosionForce(
+                    _explosionForce / cube.Size.x,
+                    cube.transform.position,
+                    _explosionRadius / cube.Size.x);
             }
         }
     }

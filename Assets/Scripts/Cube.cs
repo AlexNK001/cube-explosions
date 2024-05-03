@@ -11,8 +11,8 @@ public class Cube : MonoBehaviour
     private float _divisor = 2f;
     private MeshRenderer _meshRenderer;
 
+    public event UnityAction<Cube, bool> Divided;
     public Vector3 Size => transform.localScale;
-    public event UnityAction<Cube> Divided;
 
     private void OnEnable()
     {
@@ -22,11 +22,10 @@ public class Cube : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (Size.x >= Random.Range(MinPercentage, MaxPercentage))
-        {
-            transform.localScale /= _divisor;
-            Divided.Invoke(this);
-        }
+        bool isAlive = Size.x >= Random.Range(MinPercentage, MaxPercentage);
+
+        transform.localScale /= _divisor;
+        Divided.Invoke(this, isAlive);
 
         gameObject.SetActive(false);
     }
