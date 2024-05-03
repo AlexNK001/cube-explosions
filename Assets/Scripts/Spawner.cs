@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Test : MonoBehaviour
+public class Spawner : MonoBehaviour
 {
     [SerializeField] private List<Cube> _cubes;
 
@@ -61,7 +61,6 @@ public class Test : MonoBehaviour
                 oldCube.transform.position = mainCube.transform.position;
                 oldCube.CatchUp(mainCube);
                 newCubes.Add(oldCube);
-                //Refresh(mainCube, newCubes, oldCube);
 
                 _numberNewCubes--;
             }
@@ -77,7 +76,6 @@ public class Test : MonoBehaviour
         for (int i = 0; i < _numberNewCubes; i++)
         {
             Cube newCube = Instantiate(mainCube, mainCube.transform.position, Random.rotation);
-            //Refresh(mainCube, newCubes, newCube);
             newCube.CatchUp(mainCube);
             newCube.Divided += SelectActionOnCube;
             newCubes.Add(newCube);
@@ -85,12 +83,6 @@ public class Test : MonoBehaviour
 
         return newCubes;
     }
-
-    //private void Refresh(Cube mainCube, List<Cube> newCubes, Cube item)
-    //{
-    //    item.CatchUp(mainCube);
-    //    newCubes.Add(item);
-    //}
 
     private void Scatter(List<Cube> newCubes)
     {
