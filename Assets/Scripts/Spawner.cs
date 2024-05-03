@@ -1,113 +1,81 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 
+[RequireComponent(typeof(CubeFuse))]
 public class Spawner : MonoBehaviour
 {
-    [SerializeField] private List<Cube> _cubes;
+    [SerializeField] private Cube _cubePrefab;
 
     private int _maxNumberCubes = 6;
     private int _minNumberCubes = 2;
-    private float _explosionForce = 10f;
-    private float _explosionRadius = 5f;
-    private int _numberNewCubes;
+    private CubeFuse _cubeFuse;
+
+    private ObjectPool<Cube> _pool;
+    private int _poolCapacity = 5;
+    private int _poolMaxSize = 50;
+
+    private Cube _targetCube;
 
     private void Start()
     {
-        foreach (Cube cube in _cubes)
+        _cubeFuse = GetComponent<CubeFuse>();
+
+        _pool = new ObjectPool<Cube>
+           (
+            () => CreateCube(),
+            (cube) => ActionOnGet(cube),
+            (cube) => cube.gameObject.SetActive(false),
+            (cube) => cube.Divided -= SelectActionOnCube,
+            true,
+            _poolCapacity,
+            _poolMaxSize
+           );
+
+        Cube[] cubes = GetComponentsInChildren<Cube>();
+
+        foreach (Cube cube in cubes)
         {
+            _pool.Release(cube);
             cube.Divided += SelectActionOnCube;
+            _targetCube = cube;
+            _pool.Get();
         }
     }
 
-    private void OnDestroy()
+    private Cube CreateCube()
     {
-        foreach (Cube cube in _cubes)
-        {
-            cube.Divided -= SelectActionOnCube;
-        }
+        Cube cube = Instantiate(_cubePrefab);
+        cube.Divided += SelectActionOnCube;
+        return cube;
+    }
+
+    private void ActionOnGet(Cube cube)
+    {
+        cube.gameObject.SetActive(true);
+        cube.CatchUp(_targetCube);
+        cube.transform.SetPositionAndRotation(_targetCube.transform.position, Random.rotation);
     }
 
     private void SelectActionOnCube(Cube mainCube, bool isAlive)
     {
+        _targetCube = mainCube;
+        _pool.Release(mainCube);
+
         if (isAlive)
         {
-            List<Cube> newCubes = new();
-            _numberNewCubes = Random.Range(_minNumberCubes, _maxNumberCubes);
+            List<Cube> createdCubes = new();
+            int number = Random.Range(_minNumberCubes, _maxNumberCubes);
 
-            newCubes.AddRange(ReuseInactiveCubes(mainCube));
-
-            if (_numberNewCubes > 0)
-                newCubes.AddRange(CreateMissingCubes(mainCube));
-
-            Scatter(newCubes);
-
-            _cubes.AddRange(newCubes);
+            for (int i = 0; i < number; i++)
+            {
+                createdCubes.Add(_pool.Get());
+                _cubeFuse.Scatter(createdCubes);
+            }
         }
         else
         {
-            BlowUp(mainCube);
-        }
-    }
-
-    private List<Cube> ReuseInactiveCubes(Cube mainCube)
-    {
-        List<Cube> newCubes = new();
-
-        foreach (Cube oldCube in _cubes)
-        {
-            if (oldCube.isActiveAndEnabled == false && _numberNewCubes > 0)
-            {
-                oldCube.gameObject.SetActive(true);
-                oldCube.transform.position = mainCube.transform.position;
-                oldCube.CatchUp(mainCube);
-                newCubes.Add(oldCube);
-
-                _numberNewCubes--;
-            }
-        }
-
-        return newCubes;
-    }
-
-    private List<Cube> CreateMissingCubes(Cube mainCube)
-    {
-        List<Cube> newCubes = new();
-
-        for (int i = 0; i < _numberNewCubes; i++)
-        {
-            Cube newCube = Instantiate(mainCube, mainCube.transform.position, Random.rotation);
-            newCube.CatchUp(mainCube);
-            newCube.Divided += SelectActionOnCube;
-            newCubes.Add(newCube);
-        }
-
-        return newCubes;
-    }
-
-    private void Scatter(List<Cube> newCubes)
-    {
-        foreach (Cube newCube in newCubes)
-        {
-            if (newCube.TryGetComponent(out Rigidbody rigidbody))
-            {
-                rigidbody.AddExplosionForce(_explosionForce, transform.position, _explosionRadius);
-            }
-        }
-    }
-
-    private void BlowUp(Cube cube)
-    {
-        Collider[] hits = Physics.OverlapSphere(cube.transform.position, _explosionRadius / cube.Size.x);
-
-        foreach (Collider hit in hits)
-        {
-            if (hit.TryGetComponent(out Rigidbody rigidbody))
-            {
-                rigidbody.AddExplosionForce(
-                    _explosionForce / cube.Size.x,
-                    cube.transform.position,
-                    _explosionRadius / cube.Size.x);
-            }
+            _cubeFuse.BlowUp(mainCube);
         }
     }
 }

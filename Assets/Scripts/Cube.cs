@@ -1,14 +1,13 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-[RequireComponent(typeof(MeshRenderer))]
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(Rigidbody), typeof(MeshRenderer))]
 public class Cube : MonoBehaviour
 {
     private const float MaxPercentage = 1;
     private const float MinPercentage = 0;
+    private const float _divisor = 2f;
 
-    private float _divisor = 2f;
     private MeshRenderer _meshRenderer;
 
     public event UnityAction<Cube, bool> Divided;
@@ -16,7 +15,9 @@ public class Cube : MonoBehaviour
 
     private void OnEnable()
     {
-        _meshRenderer = GetComponent<MeshRenderer>();
+        if (_meshRenderer == null)
+            _meshRenderer = GetComponent<MeshRenderer>();
+
         _meshRenderer.material.color = Random.ColorHSV();
     }
 
@@ -26,8 +27,6 @@ public class Cube : MonoBehaviour
 
         transform.localScale /= _divisor;
         Divided.Invoke(this, isAlive);
-
-        gameObject.SetActive(false);
     }
 
     public void CatchUp(Cube cube)
