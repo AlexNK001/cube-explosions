@@ -15,7 +15,7 @@ public class Test : MonoBehaviour
     {
         foreach (Cube cube in _cubes)
         {
-            cube.Divided += CheckClick;
+            cube.Divided += SelectActionOnCube;
         }
     }
 
@@ -23,11 +23,11 @@ public class Test : MonoBehaviour
     {
         foreach (Cube cube in _cubes)
         {
-            cube.Divided -= CheckClick;
+            cube.Divided -= SelectActionOnCube;
         }
     }
 
-    private void CheckClick(Cube mainCube, bool isAlive)
+    private void SelectActionOnCube(Cube mainCube, bool isAlive)
     {
         if (isAlive)
         {
@@ -45,7 +45,7 @@ public class Test : MonoBehaviour
         }
         else
         {
-            Explosion(mainCube);
+            BlowUp(mainCube);
         }
     }
 
@@ -59,8 +59,9 @@ public class Test : MonoBehaviour
             {
                 oldCube.gameObject.SetActive(true);
                 oldCube.transform.position = mainCube.transform.position;
-
-                Refresh(mainCube, newCubes, oldCube);
+                oldCube.CatchUp(mainCube);
+                newCubes.Add(oldCube);
+                //Refresh(mainCube, newCubes, oldCube);
 
                 _numberNewCubes--;
             }
@@ -76,18 +77,20 @@ public class Test : MonoBehaviour
         for (int i = 0; i < _numberNewCubes; i++)
         {
             Cube newCube = Instantiate(mainCube, mainCube.transform.position, Random.rotation);
-            Refresh(mainCube, newCubes, newCube);
+            //Refresh(mainCube, newCubes, newCube);
+            newCube.CatchUp(mainCube);
+            newCube.Divided += SelectActionOnCube;
+            newCubes.Add(newCube);
         }
 
         return newCubes;
     }
 
-    private void Refresh(Cube mainCube, List<Cube> newCubes, Cube item)
-    {
-        item.CatchUp(mainCube);
-        item.Divided += CheckClick;
-        newCubes.Add(item);
-    }
+    //private void Refresh(Cube mainCube, List<Cube> newCubes, Cube item)
+    //{
+    //    item.CatchUp(mainCube);
+    //    newCubes.Add(item);
+    //}
 
     private void Scatter(List<Cube> newCubes)
     {
@@ -100,7 +103,7 @@ public class Test : MonoBehaviour
         }
     }
 
-    private void Explosion(Cube cube)
+    private void BlowUp(Cube cube)
     {
         Collider[] hits = Physics.OverlapSphere(cube.transform.position, _explosionRadius / cube.Size.x);
 
