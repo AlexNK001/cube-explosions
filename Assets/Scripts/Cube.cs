@@ -1,36 +1,48 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-[RequireComponent(typeof(Rigidbody), typeof(MeshRenderer))]
+[RequireComponent(typeof(Rigidbody), typeof(MeshRenderer), typeof(BoxCollider))]
 public class Cube : MonoBehaviour
 {
-    private const float MaxPercentage = 1;
-    private const float MinPercentage = 0;
-    private const float _divisor = 2f;
-
+    private Rigidbody _rigidbody;
     private MeshRenderer _meshRenderer;
+    private BoxCollider _boxCollider;
 
-    public event UnityAction<Cube, bool> Divided;
-    public Vector3 Size => transform.localScale;
+    private bool _isContact = false;
+
+    public event UnityAction<Cube> Contact;
 
     private void OnEnable()
     {
-        if (_meshRenderer == null)
+        if(_rigidbody == null)
+        {
+            _rigidbody = GetComponent<Rigidbody>();
+        }
+
+        if(_meshRenderer == null)
+        {
             _meshRenderer = GetComponent<MeshRenderer>();
+        }
 
-        _meshRenderer.material.color = Random.ColorHSV();
+        if(_boxCollider == null)
+        {
+            _boxCollider = GetComponent<BoxCollider>();
+        }
+
+        _isContact = false;
     }
 
-    private void OnMouseDown()
+    private void OnCollisionEnter(Collision collision)
     {
-        bool isAlive = Size.x >= Random.Range(MinPercentage, MaxPercentage);
-
-        transform.localScale /= _divisor;
-        Divided.Invoke(this, isAlive);
+        if(collision.collider.TryGetComponent<Rain>(out _) && _isContact == false)
+        {
+            _isContact = true;
+            Contact.Invoke(this);
+        }
     }
 
-    public void CatchUp(Cube cube)
+    public void SetColor(Color color)
     {
-        transform.localScale = cube.Size;
+        _meshRenderer.material.color = color;
     }
 }
