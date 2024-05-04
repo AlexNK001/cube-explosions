@@ -4,31 +4,18 @@ using UnityEngine.Events;
 [RequireComponent(typeof(Rigidbody), typeof(MeshRenderer), typeof(BoxCollider))]
 public class Cube : MonoBehaviour
 {
-    private Rigidbody _rigidbody;
     private MeshRenderer _meshRenderer;
-    private BoxCollider _boxCollider;
-
     private bool _isContact = false;
 
     public event UnityAction<Cube> Contact;
 
+    private void Awake()
+    {
+        _meshRenderer = GetComponent<MeshRenderer>();
+    }
+
     private void OnEnable()
     {
-        if(_rigidbody == null)
-        {
-            _rigidbody = GetComponent<Rigidbody>();
-        }
-
-        if(_meshRenderer == null)
-        {
-            _meshRenderer = GetComponent<MeshRenderer>();
-        }
-
-        if(_boxCollider == null)
-        {
-            _boxCollider = GetComponent<BoxCollider>();
-        }
-
         _isContact = false;
     }
 
