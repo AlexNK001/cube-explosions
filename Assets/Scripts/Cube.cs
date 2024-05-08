@@ -1,31 +1,22 @@
 using UnityEngine;
-using UnityEngine.Events;
 
 [RequireComponent(typeof(Rigidbody), typeof(MeshRenderer), typeof(BoxCollider))]
 public class Cube : MonoBehaviour
 {
     private MeshRenderer _meshRenderer;
-    private bool _isContact = false;
-
-    public event UnityAction<Cube> Contact;
+    private Rigidbody _rigidbody;
 
     private void Awake()
     {
         _meshRenderer = GetComponent<MeshRenderer>();
+        _rigidbody = GetComponent<Rigidbody>();
     }
 
     private void OnEnable()
     {
-        _isContact = false;
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if(collision.collider.TryGetComponent<Rain>(out _) && _isContact == false)
-        {
-            _isContact = true;
-            Contact.Invoke(this);
-        }
+        _rigidbody.velocity = Vector3.zero;
+        _rigidbody.angularVelocity = Vector3.zero;
+        transform.rotation = Quaternion.identity;
     }
 
     public void SetColor(Color color)

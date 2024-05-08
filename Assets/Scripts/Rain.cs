@@ -2,69 +2,72 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(PositionGenerator))]
-[RequireComponent(typeof(ColorHandler))]
-[RequireComponent(typeof(CubePool))]
+[RequireComponent(typeof(ChangingPosition), typeof(ColorChanging), typeof(CubePool))]
 public class Rain : MonoBehaviour
 {
-    private PositionGenerator _positionGenerator;
+    [SerializeField] private float _timeBetweenAppearances = 0.2f;
+
+    private WaitForSeconds _delayBetweenAppearances;
+    private Coroutine _spawnCubes;
+
+    private ChangingPosition _changingPosition;
+    private ColorChanging _colorChanging;
     private CubePool _cubePool;
-    private ColorHandler _colorHandler;
 
-    private Dictionary<Cube, Coroutine> _listCoroutines = new();
-    private float _minDestroyTime = 2f;
-    private float _maxDestroyTime = 5f;
-
-    [SerializeField] private float _delay = 0.2f;
-    private WaitForSeconds _waitForSeconds;
-    private Coroutine _coroutine;
+    private Dictionary<Cube, Coroutine> _waitingDisappear = new();
+    private float _minDisappearanceTime = 2f;
+    private float _maxDisappearanceTime = 5f;
 
     private void Awake()
     {
-        _positionGenerator = GetComponent<PositionGenerator>();
-        _colorHandler = GetComponent<ColorHandler>();
+        _changingPosition = GetComponent<ChangingPosition>();
+        _colorChanging = GetComponent<ColorChanging>();
         _cubePool = GetComponent<CubePool>();
-
-        _waitForSeconds = new(_delay);
+        _delayBetweenAppearances = new(_timeBetweenAppearances);
     }
 
-    private void CheakContact(Cube cube)
+    private void OnCollisionEnter(Collision collision)
     {
-        Coroutine coroutine = StartCoroutine(DelayDestroy(cube));
-        _listCoroutines.Add(cube, coroutine);
+        if (collision.collider.TryGetComponent(out Cube cube) && TryContacted(cube) == false)
+        {
+            Coroutine coroutine = StartCoroutine(DelayDestroy(cube));
+            _waitingDisappear.Add(cube, coroutine);
+        }
+    }
+
+    public bool TryContacted(Cube cube)
+    {
+        return _waitingDisappear.ContainsKey(cube);
     }
 
     private IEnumerator DelayDestroy(Cube cube)
     {
-        while (true)
+        while (gameObject.activeSelf)
         {
-            yield return new WaitForSeconds(Random.Range(_minDestroyTime, _maxDestroyTime));
+            yield return new WaitForSeconds(Random.Range(_minDisappearanceTime, _maxDisappearanceTime));
             _cubePool.Accept(cube);
-            StopCoroutine(_listCoroutines[cube]);
-            _listCoroutines.Remove(cube);
-            cube.Contact -= CheakContact;
+            StopCoroutine(_waitingDisappear[cube]);
+            _waitingDisappear.Remove(cube);
         }
     }
 
     private void Start()
     {
-        _coroutine = StartCoroutine(nameof(CreatingCubes));
+        _spawnCubes = StartCoroutine(nameof(SpawnCubes));
     }
 
     private void OnDisable()
     {
-        StopCoroutine(_coroutine);
+        StopCoroutine(_spawnCubes);
     }
 
-    private IEnumerator CreatingCubes()
+    private IEnumerator SpawnCubes()
     {
         while (gameObject.activeSelf)
         {
-            Cube cube = _cubePool.Issue();
-            cube.Contact += CheakContact;
-            cube.transform.position = _positionGenerator.GetRandomPosition();
+            _cubePool.Issue();
 
-            yield return _waitForSeconds;
+            yield return _delayBetweenAppearances;
         }
     }
 }

@@ -4,7 +4,7 @@ public abstract class PullUser : MonoBehaviour
 {
     private protected CubePool _cubePool;
 
-    private void Start()
+    private void OnEnable()
     {
         _cubePool = GetComponent<CubePool>();
         Subscribe();

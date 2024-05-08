@@ -10,27 +10,25 @@ public class CubePool : MonoBehaviour
 
     private ObjectPool<Cube> _pool;
 
-    public event UnityAction<Cube> CubeCreated;
     public event UnityAction<Cube> CubeIssued;
-    public event UnityAction<Cube> CubeDestroyed;
 
     private void Awake()
     {
         _pool = new ObjectPool<Cube>
             (
-             () => CreateCube(),
+             () => Instantiate(_cubePrefab),
              (cube) => ActionOnGet(cube),
              (cube) => cube.gameObject.SetActive(false),
-             (cube) => CubeDestroyed.Invoke(cube),
+             (cube) => Destroy(cube),
              true,
              _poolCapacity,
              _poolMaxSize
             );
     }
 
-    public Cube Issue()
+    public void Issue()
     {
-        return _pool.Get();
+        _pool.Get();
     }
 
     public void Accept(Cube cube)
@@ -38,16 +36,9 @@ public class CubePool : MonoBehaviour
         _pool.Release(cube);
     }
 
-    private Cube CreateCube()
-    {
-        Cube cube = Instantiate(_cubePrefab);
-        CubeCreated.Invoke(cube);
-        return cube;
-    }
-
     private void ActionOnGet(Cube cube)
     {
         cube.gameObject.SetActive(true);
-        CubeIssued.Invoke(cube);
+        CubeIssued?.Invoke(cube);
     }
 }
