@@ -17,7 +17,7 @@ public class Cube : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
     }
 
-    private void OnEnable()
+    public void OnEnable()
     {
         _isContact = false;
         _rigidbody.velocity = Vector3.zero;
@@ -31,13 +31,8 @@ public class Cube : MonoBehaviour
         if(collision.collider.TryGetComponent(out Rain rain) && _isContact == false)
         {
             _isContact = true;
-            rain.SetCube(this);
+            rain.StartDisappearing(this);
             _meshRenderer.material.color = _contactColor;
         }
     }
-
-    //public void SetColor(Color color)
-    //{
-    //    _meshRenderer.material.color = color;
-    //}
 }
