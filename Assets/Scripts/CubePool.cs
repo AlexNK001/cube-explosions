@@ -2,18 +2,22 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Pool;
 
+[RequireComponent(typeof(ChangingPosition))]
 public class CubePool : MonoBehaviour
 {
     [SerializeField] private Cube _cubePrefab;
     [SerializeField] private int _poolCapacity = 5;
     [SerializeField] private int _poolMaxSize = 10000;
 
+    private ChangingPosition _changingPosition;
     private ObjectPool<Cube> _pool;
 
-    public event UnityAction<Cube> CubeIssued;
+    //public event UnityAction<Cube> CubeIssued;
 
     private void Awake()
     {
+        _changingPosition = GetComponent<ChangingPosition>();
+
         _pool = new ObjectPool<Cube>
             (
              () => Instantiate(_cubePrefab),
@@ -39,6 +43,7 @@ public class CubePool : MonoBehaviour
     private void ActionOnGet(Cube cube)
     {
         cube.gameObject.SetActive(true);
-        CubeIssued?.Invoke(cube);
+        cube.transform.position = _changingPosition.ChangeCubePosition();
+        //CubeIssued?.Invoke(cube);
     }
 }

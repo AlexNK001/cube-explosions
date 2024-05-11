@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ChangingPosition : PullUser
+public class ChangingPosition : MonoBehaviour
 {
     private const float Disection = -2f;
 
@@ -17,22 +17,22 @@ public class ChangingPosition : PullUser
         _surfaceAnglePosition = new(_xLength / Disection, _hight, _zLength / Disection);
     }
 
-    private void ChangeCubePosition(Cube cube)
+    public Vector3 ChangeCubePosition()
     {
         float x = _surfaceAnglePosition.x + Random.Range(0, _xLength);
         float y = _hight;
         float z = _surfaceAnglePosition.z + Random.Range(0, _zLength);
 
-        cube.transform.position = new(x, y, z);
+        return new(x, y, z);
     }
 
-    protected override void Subscribe()
-    {
-        _cubePool.CubeIssued += ChangeCubePosition;
-    }
+    //protected override void Subscribe()
+    //{
+    //    _cubePool.CubeIssued += ChangeCubePosition;
+    //}
 
-    protected override void Unsubscribe()
-    {
-        _cubePool.CubeIssued -= ChangeCubePosition;
-    }
+    //protected override void Unsubscribe()
+    //{
+    //    _cubePool.CubeIssued -= ChangeCubePosition;
+    //}
 }
