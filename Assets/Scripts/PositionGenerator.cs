@@ -17,7 +17,7 @@ public class PositionGenerator : MonoBehaviour
         _surfaceAnglePosition = new(_xLength / Disection, _yOffSet, _zLength / Disection);
     }
 
-    public Vector3 ChangeCubePosition()
+    public Vector3 GetSpawnPosition()
     {
         float x = _surfaceAnglePosition.x + Random.Range(0, _xLength);
         float y = _yOffSet;

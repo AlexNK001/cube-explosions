@@ -1,38 +1,43 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(CubePool))]
 public class Rain : MonoBehaviour
 {
+    [SerializeField] private ShowingPool _showingCubePool;
+    [SerializeField] private ShowingPool _showingBombPool;
+    [SerializeField] private Cube _cubePrefab;
+    [SerializeField] private Bomb _bombPrefab;
+    [SerializeField] private PositionGenerator _positionGenerator;
+
     [SerializeField] private float _timeBetweenAppearances = 0.2f;
-    [SerializeField] private float _minDisappearanceTime = 2f;
-    [SerializeField] private float _maxDisappearanceTime = 5f;
 
     private WaitForSeconds _delayBetweenAppearances;
-    private CubePool _cubePool;
+    private ItemPool<Cube> _cubePool;
+    private ItemPool<Bomb> _bombPool;
+    private List<Cube> _cubes;
 
     private void Awake()
     {
-        _cubePool = GetComponent<CubePool>();
+        _cubePool = new ItemPool<Cube>(_cubePrefab);
+        _bombPool = new ItemPool<Bomb>(_bombPrefab);
+        _cubes = new List<Cube>();
         _delayBetweenAppearances = new(_timeBetweenAppearances);
     }
 
     private void Start()
     {
         StartCoroutine(SpawnCubes());
+        _cubePool.InformationUpdated += _showingCubePool.Show;
+        _bombPool.InformationUpdated += _showingBombPool.Show;
     }
 
-    public void StartDisappearing(Cube cube)
+    private void OnDestroy()
     {
-        StartCoroutine(DelayDisappearance(cube));
-    }
-
-    private IEnumerator DelayDisappearance(Cube cube)
-    {
-        yield return new WaitForSeconds(UnityEngine.Random.Range(_minDisappearanceTime, _maxDisappearanceTime));
-        _cubePool.Accept(cube);
+        for (int i = 0; i < _cubes.Count; i++)
+        {
+            _cubes[i].TimeLifeIsOver -= ReplaceWithBomb;
+        }
     }
 
     private IEnumerator SpawnCubes()
@@ -40,22 +45,16 @@ public class Rain : MonoBehaviour
         while (gameObject.activeSelf)
         {
             yield return _delayBetweenAppearances;
-            _cubePool.Issue();
+            Cube cube = _cubePool.Get(_positionGenerator.GetSpawnPosition());
+            cube.TimeLifeIsOver += ReplaceWithBomb;
+            _cubes.Add(cube);
         }
     }
-}
 
-public class PoolObject : MonoBehaviour
-{
-    //private 
-}
-
-public class Timer : MonoBehaviour
-{
-    public Action<PoolObject> LifeTimeIsOver;
-
-    private void Update()
+    private void ReplaceWithBomb(Cube cube)
     {
-        
+        _bombPool.Get(cube.transform.position);
+        cube.TimeLifeIsOver -= ReplaceWithBomb;
+        _cubes.Remove(cube);
     }
 }
