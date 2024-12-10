@@ -17,7 +17,7 @@ public class Cube : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
     }
 
-    public void OnEnable()
+    private void OnEnable()
     {
         _isContact = false;
         _rigidbody.velocity = Vector3.zero;

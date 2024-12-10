@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CubePool))]
@@ -19,7 +21,7 @@ public class Rain : MonoBehaviour
 
     private void Start()
     {
-        StartCoroutine(nameof(SpawnCubes));
+        StartCoroutine(SpawnCubes());
     }
 
     public void StartDisappearing(Cube cube)
@@ -29,7 +31,7 @@ public class Rain : MonoBehaviour
 
     private IEnumerator DelayDisappearance(Cube cube)
     {
-        yield return new WaitForSeconds(Random.Range(_minDisappearanceTime, _maxDisappearanceTime));
+        yield return new WaitForSeconds(UnityEngine.Random.Range(_minDisappearanceTime, _maxDisappearanceTime));
         _cubePool.Accept(cube);
     }
 
@@ -40,5 +42,20 @@ public class Rain : MonoBehaviour
             yield return _delayBetweenAppearances;
             _cubePool.Issue();
         }
+    }
+}
+
+public class PoolObject : MonoBehaviour
+{
+    //private 
+}
+
+public class Timer : MonoBehaviour
+{
+    public Action<PoolObject> LifeTimeIsOver;
+
+    private void Update()
+    {
+        
     }
 }
