@@ -1,17 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
-public class ItemPool<T> where T : Item
+public class ItemSpawner<T> where T : Item
 {
     private readonly T _prefab;
     private readonly ObjectPool<T> _objectPool;
+    private readonly IPositionGenerator _positionGenerator;
+    private readonly List<Item> _items;
+
     private int _numberObjectAppearances;
 
     public Action<ViewInfo> InformationUpdated;
 
-    public ItemPool(T prefab, bool collectionCheck = true, int defaultCapacity = 10, int maxSize = 10000)
+    public ItemSpawner(IPositionGenerator positionGenerator, T prefab, bool collectionCheck = true, int defaultCapacity = 10, int maxSize = 10000)
     {
+        _positionGenerator = positionGenerator;
+        _positionGenerator.GetPosition += Get;
+
+        _items = new List<Item>();
+
         _prefab = prefab;
 
         _objectPool = new ObjectPool<T>(
@@ -23,23 +32,31 @@ public class ItemPool<T> where T : Item
             maxSize: maxSize);
     }
 
-    public T Get(Vector3 position)
+    public void Unsubscribe()
+    {
+        for (int i = 0; i < _items.Count; i++)
+        {
+            _items[i].TimeLifeIsOver -= Release;
+        }
+    }
+
+    private void Get(Vector3 position)
     {
         T item = _objectPool.Get();
         item.transform.position = position;
-        return item;
     }
 
-    public void Release(T item)
+    protected virtual void Release(Item item)
     {
-        _objectPool.Release(item);
+        _objectPool.Release(item as T);
     }
 
     private T CreateFunc()
     {
         T poolObject = MonoBehaviour.Instantiate(_prefab);
         poolObject.gameObject.SetActive(false);
-        poolObject.Init<T>(this);
+        poolObject.TimeLifeIsOver += Release;
+        _items.Add(poolObject);
         return poolObject;
     }
 

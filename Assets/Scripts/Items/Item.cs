@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public abstract class Item : MonoBehaviour
 {
@@ -9,7 +10,7 @@ public abstract class Item : MonoBehaviour
     [SerializeField] protected float MinDuration;
     [SerializeField] protected float MaxDuration;
 
-    public abstract void Init<T>(ItemPool<T> itemPool) where T : Item;
+    public Action<Item> TimeLifeIsOver;
 
     protected void ResetMovements()
     {

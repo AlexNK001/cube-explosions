@@ -1,28 +1,39 @@
 using UnityEngine;
 
-public class PositionGenerator : MonoBehaviour
+public class PositionGenerator : IPositionGenerator
 {
     private const float Disection = -2f;
 
-    [SerializeField] private float _yOffSet = 17f;
-
-    private int _xLength;
-    private int _zLength;
+    private readonly Timer _timer;
+    private readonly float _yOffSet = 17f;
+    private readonly int _xLength;
+    private readonly int _zLength;
     private Vector3 _surfaceAnglePosition;
 
-    private void Awake()
+    public event System.Action<Vector3> GetPosition;
+
+    public PositionGenerator(Timer timer, float yOffset, Transform transform)
     {
+        _timer = timer;
+        _timer.TimeHasCome += GetSpawnPosition;
+
+        _yOffSet = yOffset;
         _xLength = Mathf.RoundToInt(transform.localScale.x);
         _zLength = Mathf.RoundToInt(transform.localScale.z);
         _surfaceAnglePosition = new(_xLength / Disection, _yOffSet, _zLength / Disection);
     }
 
-    public Vector3 GetSpawnPosition()
+    public void Unsubscribe()
+    {
+        _timer.TimeHasCome -= GetSpawnPosition;
+    }
+
+    private void GetSpawnPosition()
     {
         float x = _surfaceAnglePosition.x + Random.Range(0, _xLength);
         float y = _yOffSet;
         float z = _surfaceAnglePosition.z + Random.Range(0, _zLength);
 
-        return new(x, y, z);
+        GetPosition.Invoke(new(x, y, z));
     }
 }

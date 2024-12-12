@@ -6,17 +6,10 @@ public class Bomb : Item
 {
     [SerializeField] private ExplosionCollider _explosionCollider;
 
-    private ItemPool<Bomb> _pool;
-
     private void OnEnable()
     {
         StartCoroutine(Explode());
         ResetMovements();
-    }
-
-    public override void Init<T>(ItemPool<T> itemPool)
-    {
-        _pool = itemPool as ItemPool<Bomb>;
     }
 
     private IEnumerator Explode()
@@ -36,6 +29,6 @@ public class Bomb : Item
         yield return null;
         _explosionCollider.gameObject.SetActive(false);
 
-        _pool.Release(this);
+        TimeLifeIsOver.Invoke(this);
     }
 }
